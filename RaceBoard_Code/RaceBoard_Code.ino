@@ -5,15 +5,41 @@
 #include <SDCustom.h>
 #include <TelemetryLLCC68.h>
 
+bool GPS_Flag;
+double Long;
+double Lati;
+double Sp;
+double Alt;
+String Coord;
 
+bool GPS_piling(double *Long, double  *Lati, double *Sp, double *Alt, String *Coord) {
+  GPS_m GPS(9600);
+  GPS.StartTrack();
+
+  GPS_Flag=GPS.IsUpdated();
+  *Long=GPS.Longitude();
+  *Lati=GPS.Latitude();
+  *Sp=GPS.Speed();
+  *Alt=GPS.Altitude();
+  *Coord=GPS.LonLatAlt();
+
+  GPS.StopTrack();
+  return GPS_Flag;
+}
 
 
 void setup() {
-  // put your setup code here, to run once:
+  
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
+  GPS_Flag = GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
+  
+                     
+
+  
+  
 
 }
