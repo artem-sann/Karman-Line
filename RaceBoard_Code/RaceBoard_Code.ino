@@ -4,6 +4,27 @@
 #include <Macros.h>
 #include <SDCustom.h>
 #include <TelemetryLLCC68.h>
+#include <SD.h>
+
+//---------------------Пины SD карты------------------------------------------------------->
+#define MISO 50
+#define MOSI 51
+#define SCLK 52
+#define CS_pin 37 
+//----------------------------------------------------------------------------------------->
+
+//----------------------Функции для SD----------------------------------------------------->
+void SD_begin() {
+  pinMode(53,OUTPUT);
+  pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(CS_pin, OUTPUT);
+  
+  digitalWrite(9,HIGH);
+  digitalWrite(10,HIGH);
+  digitalWrite(53,HIGH);
+}
+  
 
 //----------------------Переменные для GPS------------------------------------------------->
 bool GPS_Flag;  //Актуальность данных (true-данные новые и не считывались)
@@ -18,6 +39,7 @@ String Coord;   //Строка с координатами и высотой
 bool GPS_piling(double *Long, double *Lati, double *Sp, double *Alt, String *Coord) {
   GPS_m GPS(9600);
   GPS.StartTrack();
+  
 
   GPS_Flag = GPS.IsUpdated();
   *Long = GPS.Longitude();
@@ -52,12 +74,32 @@ void print_GPS(double *Long, double *Lati, double *Sp, double *Alt, String *Coor
 
 void setup() {
   Serial.begin(9600);
+  SD_begin();
+  if (!SD.begin(CS_pin)) {
+    Serial.println("Card Failure");
+  }
+  else {
+    Serial.println("Card Ready");
+  }
 }
 
 void loop() {
 
+  long time_to_SD = millis();
   GPS_Flag = GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
   print_GPS(&Long, &Lati, &Sp, &Alt, &Coord, &GPS_Flag);
+
+  File dataFile = SD.open("logs.csv", FILE_WRITE);
+  if (dataFile) {
+    dataFile.print(time_to_SD);
+    dataFile.print(", ");
+    dataFile.println(Coord);
+    dataFile.close();
+  }
+  else {
+    Serial.println("FAILLLLLL");
+  }
+
 
   delay(1000);
 }
