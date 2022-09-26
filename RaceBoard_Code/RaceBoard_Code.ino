@@ -33,18 +33,18 @@ bool GPS_piling(double *Long, double *Lati, double *Sp, double *Alt, String *Coo
 
 void print_GPS(double *Long, double *Lati, double *Sp, double *Alt, String *Coord, bool *GPS_Flag) {
 
-  Serial.println("\nSpeed \tLongitude \tLatitude \tAltitude \tCoord \t\t\t\tGPS_Flag");
-  Serial.println("---------------------------------------------------------------------------------------------------");
+  Serial.println(F("\nSpeed \tLongitude \tLatitude \tAltitude \tCoord \t\t\t\tGPS_Flag"));
+  Serial.println(F("---------------------------------------------------------------------------------------------------"));
   Serial.print(*Sp);
-  Serial.print("\t"); 
+  Serial.print(F("\t")); 
   Serial.print(*Long);
-  Serial.print("\t\t");
+  Serial.print(F("\t\t"));
   Serial.print(*Lati);
-  Serial.print("\t\t");
+  Serial.print(F("\t\t"));
   Serial.print(*Alt);
-  Serial.print("\t\t");
+  Serial.print(F("\t\t"));
   Serial.print(*Coord);
-  Serial.print("\t\t");
+  Serial.print(F("\t\t"));
   Serial.println(*GPS_Flag);
 
 }
