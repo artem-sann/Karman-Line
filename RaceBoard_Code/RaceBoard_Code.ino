@@ -5,12 +5,14 @@
 #include <SDCustom.h>
 #include <TelemetryLLCC68.h>
 
-bool GPS_Flag;
-double Long;
-double Lati;
-double Sp;
-double Alt;
-String Coord;
+//----------------------Переменные для GPS------------------------------------->
+bool GPS_Flag;  //Актуальность данных (true-данные новые и не считывались)
+double Long;  //Долгота, в градусах 
+double Lati;  //Широта, в градусах
+double Sp;  //Горизонтальная скорость, в метрах в секунду 
+double Alt;  //ВысотаБ в метрах в секунду
+String Coord; //Строка с координатами и высотой
+//----------------------------------------------------------------------------->
 
 bool GPS_piling(double *Long, double  *Lati, double *Sp, double *Alt, String *Coord) {
   GPS_m GPS(9600);
