@@ -1,10 +1,16 @@
+#include <AutoUpdate.h>
+#include <Timers.h>
+
 #include <GPS.h>
 #include <ADC.h>
 #include <IntPin.h>
-#include <Macros.h>
+//#include <Macros.h>
 #include <SDCustom.h>
 #include <TelemetryLLCC68.h>
 #include <SD.h>
+///#include <Macros.h>
+
+AutoUpd_m AUpd; 
 
 //---------------------Пины SD карты------------------------------------------------------->
 #define MISO 50
@@ -12,6 +18,8 @@
 #define SCLK 52
 #define CS_pin 37 
 //----------------------------------------------------------------------------------------->
+
+GPS_m GPS(9600);
 
 //----------------------Функции для SD----------------------------------------------------->
 void SD_begin() {
@@ -23,6 +31,19 @@ void SD_begin() {
   digitalWrite(9,HIGH);
   digitalWrite(10,HIGH);
   digitalWrite(53,HIGH);
+}
+
+bool SD_Start_Write() {
+  
+
+}
+
+
+//----------------------Функции для SS----------------------------------------------------->
+
+void save_event(int delay) {
+
+
 }
   
 
@@ -37,8 +58,8 @@ String Coord;   //Строка с координатами и высотой
 
 //-----------------------------Функции по работе с GPS------------------------------------->
 bool GPS_piling(double *Long, double *Lati, double *Sp, double *Alt, String *Coord) {
-  GPS_m GPS(9600);
-  GPS.StartTrack();
+  
+  
   
 
   GPS_Flag = GPS.IsUpdated();
@@ -48,7 +69,7 @@ bool GPS_piling(double *Long, double *Lati, double *Sp, double *Alt, String *Coo
   *Alt = GPS.Altitude();
   *Coord = GPS.LonLatAlt();
 
-  GPS.StopTrack();
+  
   return GPS_Flag;
 }
 
@@ -73,6 +94,9 @@ void print_GPS(double *Long, double *Lati, double *Sp, double *Alt, String *Coor
 //----------------------------------------------------------------------------------------->
 
 void setup() {
+  GPS.StartTrack();
+  AUpd.enableTimer();
+  AUpd.GPSEn(30);
   Serial.begin(9600);
   SD_begin();
   if (!SD.begin(CS_pin)) {
@@ -84,6 +108,7 @@ void setup() {
 }
 
 void loop() {
+  
 
   long time_to_SD = millis();
   GPS_Flag = GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
