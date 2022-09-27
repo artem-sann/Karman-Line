@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(9600);
   Telemetry.on();
   Telemetry.SetMaxPower();
-  Telemetry.SetChannel(Channel_5);
+  Telemetry.SetChannel(Channel_2);
 }
 
 void loop() {

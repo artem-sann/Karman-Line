@@ -14,7 +14,7 @@
 #define MISO 50
 #define MOSI 51
 #define SCLK 52
-#define CS_pin 37 
+#define CS_pin 37
 //----------------------------------------------------------------------------------------->
 
 #define Buzzer_Pin 4           //Пин к которому подключен бузер
@@ -22,13 +22,13 @@
 
 #define BuzzerOn tone(Buzzer_Pin, Buzzer_Frequency)              //Активировать бузер
 #define BuzzerOnTime(x) tone(Buzzer_Pin, Buzzer_Frequency, (x))  //Активировать бузер на некоторое время в мс
-#define BuzzerOff noTone(Buzzer_Pin)   
+#define BuzzerOff noTone(Buzzer_Pin)
 
 #define DCMotorPin1 6   //Пин 1-го входа мотора V0.1R && V0.2
 #define DCMotorPin2 7   //Пин 2-го входа мотора
 #define DCWakeUPPin 41  //Пин запуска драйвера двигателя
 
-TinyGPSPlus GPSPlus; 
+TinyGPSPlus GPSPlus;
 Barometer_m Bar;
 IMU_m IMU;
 
@@ -37,7 +37,7 @@ String msg;
 double msg_d[10];
 int32_t msg_i[10];
 
-AutoUpd_m AUpd; 
+AutoUpd_m AUpd;
 GPS_m GPS(9600);
 
 bool SS_flag = false;
@@ -62,28 +62,30 @@ double Height_K;
 double VertSpeed;
 
 
-double CalibAccel[4][3]={
-          {0,0,0},  //ofsett
-          {1,0,0},   //first line
-          {0,1,0},   //second line
-          {0,0,1}};  //third line
-double CalibGyro[3]={0,0,0};  //ofsett
-double CalibMag[4][3]={
-          {0,0,0},  //ofsett
-          {1,0,0},   //first line
-          {0,1,0},   //second line
-          {0,0,1}};  //third line
+double CalibAccel[4][3] = {
+  { 0, 0, 0 },  //ofsett
+  { 1, 0, 0 },  //first line
+  { 0, 1, 0 },  //second line
+  { 0, 0, 1 }
+};                                  //third line
+double CalibGyro[3] = { 0, 0, 0 };  //ofsett
+double CalibMag[4][3] = {
+  { 0, 0, 0 },  //ofsett
+  { 1, 0, 0 },  //first line
+  { 0, 1, 0 },  //second line
+  { 0, 0, 1 }
+};  //third line
 
 
 void SD_begin() {
-  pinMode(53,OUTPUT);
-  pinMode(9,OUTPUT);
-  pinMode(10,OUTPUT);
+  pinMode(53, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
   pinMode(CS_pin, OUTPUT);
-  
-  digitalWrite(9,HIGH);
-  digitalWrite(10,HIGH);
-  digitalWrite(53,HIGH);
+
+  digitalWrite(9, HIGH);
+  digitalWrite(10, HIGH);
+  digitalWrite(53, HIGH);
 }
 
 bool SD_Header_write() {
@@ -118,24 +120,23 @@ bool SD_Header_write() {
     dataFile.print("Sp");
     dataFile.print(",");
     dataFile.println("SS_flag");
+    dataFile.print(",");
+    dataFile.println("Delta_S");
 
     dataFile.close();
     return true;
-  }
-  else {
+  } else {
     Serial.println("FAILLLLLL");
     return false;
   }
-
-
 }
 bool SD_data_Write(double *Temp, double *Height_K, double *VertSpeed, double *accel,  //судя по всему функция выполняется 0.2 секунды
-                    double *gyro, String Coord, double *Sp, bool SS_flag) {
-  
-  long time_to_SD = millis(); // милисекунды
+                   double *gyro, String Coord, double *Sp, bool SS_flag, double Delta_S) {
+
+  long time_to_SD = millis();  // милисекунды
   File dataFile = SD.open("logs.csv", FILE_WRITE);
 
-  if (dataFile) { 
+  if (dataFile) {
     dataFile.print(time_to_SD);
     dataFile.print(",");
     dataFile.print(*Temp);
@@ -161,31 +162,32 @@ bool SD_data_Write(double *Temp, double *Height_K, double *VertSpeed, double *ac
     dataFile.print(*Sp);
     dataFile.print(",");
     dataFile.println(SS_flag);
+    dataFile.print(",");
+    dataFile.println(Delta_S);
 
     dataFile.close();
-  }
-  else {
+  } else {
     Serial.println("FAILLLLLL");
   }
 }
 
 
 
-void GPS_Init(){
+void GPS_Init() {
   GPS.StartTrack();
   AUpd.enableTimer();
   AUpd.GPSEn(30);
-} 
+}
 
 bool GPS_piling(double *Long, double *Lati, double *Sp, double *Alt, String *Coord) {
-  
+
   GPS_Flag = GPS.IsUpdated();
   *Long = GPS.Longitude();
   *Lati = GPS.Latitude();
   *Sp = GPS.Speed();
   *Alt = GPS.Altitude();
   *Coord = GPS.LonLatAlt();
-   
+
   return GPS_Flag;
 }
 
@@ -208,12 +210,12 @@ void DCMotorInit() {
 
 
 
-void print_Telemetry(double *Temp, double *Height, double *Height_K, double *VertSpeed, double *Accel_1, double *Accel_2, double *Accel_3, double *Gyro_1, double *Gyro_2, double *Gyro_3, double *Mag_1, double *Mag_2, double *Mag_3) {
+void print_Telemetry(double *Temp, double *Height, double *Height_K, double *VertSpeed, double *Accel_1, double *Accel_2, double *Accel_3, double *Gyro_1, double *Gyro_2, double *Gyro_3, double *Mag_1, double *Mag_2, double *Mag_3, double Delta_S) {
 
   Serial.println("\nTemp \tHeight \tHeight_K \tVertSpeed \tAccel_1 \tAccel_2 \tAccel_3 \tGyro_1 \tGyro_2 \tGyro_3 \tMag_1 \tMag_2 \tMag_3");
   Serial.println("----------------------------------------------------------------------------------------------------------------------------------------------");
   Serial.print(*Temp);
-  Serial.print("\t"); 
+  Serial.print("\t");
   Serial.print(*Height);
   Serial.print("\t");
   Serial.print(*Height_K);
@@ -238,20 +240,19 @@ void print_Telemetry(double *Temp, double *Height, double *Height_K, double *Ver
   Serial.print("\t");
   Serial.print(*Mag_3);
   Serial.print("\t\t");
-  
+}
 
-} 
-
-String MessageParser(double Height, double Long, double Lati, double Delta_S, double VertSpeed) {
-  String answer = ("H: " + String(Height,3) + " Crd: " + String(Long,5)+" "+String(Lati,5) + " dS: " + String(Delta_S,2) + "        v: " + String(VertSpeed, 2));
+String MessageParser(double Height, double Long, double Lati, double Delta_S, double VertSpeed, bool SS_flag) {
+  String answer = ("H: " + String(Height, 3) + " Crd: " + String(Long, 5) + " " + String(Lati, 5) + " dS: " + String(Delta_S, 2) + " v: " + String(VertSpeed, 2) + " SS: " + String(SS_flag));
   return answer;
-
 }
 
 
 void setup() {
 
   DCMotorInit();
+  //DCMotorSetSpeed(100);
+
 
   GPS_Init();
 
@@ -265,8 +266,7 @@ void setup() {
   SD_begin();
   if (!SD.begin(CS_pin)) {
     Serial.println("Card Failure");
-  }
-  else {
+  } else {
     Serial.println("Card Ready");
   }
   SD_Header_write();
@@ -279,34 +279,34 @@ void setup() {
   //---------------------------------------->
   BuzzerOnTime(200);
   delay(300);
-
 }
+
 //-------------------------------переменные для системы спасения---------------------->
 bool flag_1st_point = true;
 bool flag_Axel_null = false;
-double 1st_Height = -100;
-double maxHight_calculated = 270; // предполагаемая максимальная высота полета минус 5 метров
+double first_Height = -100;
+double maxHight_calculated = 270;  // предполагаемая максимальная высота полета минус 10 метров
 
 //------------------------------------------------------------------------------------>
 
 void loop() {
   //калибровка начального положения gps------------------------------------------------>
-  while (millis()<2000) {
+  while (millis() < 2000) {
     StartLong = GPS.Longitude();
     StartLati = GPS.Latitude();
   }
 
   // снятие данных со всех датчиков---------------------------------------------------->
-  IMU.SetCalibAccel(CalibAccel[0],CalibAccel[1],CalibAccel[2],CalibAccel[3]);
+  IMU.SetCalibAccel(CalibAccel[0], CalibAccel[1], CalibAccel[2], CalibAccel[3]);
   IMU.SetCalibGyro(CalibGyro);
-  IMU.SetCalibMag(CalibMag[0],CalibMag[1],CalibMag[2],CalibMag[3]);
+  IMU.SetCalibMag(CalibMag[0], CalibMag[1], CalibMag[2], CalibMag[3]);
 
   IMU.GetAccel(accel);
   IMU.GetGyro(gyro);
   IMU.GetMag(mag);
   Bar.Upd();
   AUpd.BarEn(10);
-  
+
   Temp = Bar.GetTemp();
   Height = Bar.GetHeight();
   Height_K = Bar.GetHeightK();
@@ -316,26 +316,29 @@ void loop() {
   Delta_S = GPSPlus.distanceBetween(StartLati, StartLong, Lati, Long);
 
   // запись снятых данных в файл------------------------------------------------------->
-  SD_data_Write(&Temp, &Height_K, &VertSpeed, accel, gyro, Coord, &Sp, SS_flag);
+  SD_data_Write(&Temp, &Height_K, &VertSpeed, accel, gyro, Coord, &Sp, SS_flag, Delta_S);
 
   // отправка полученных данных через радио ------------------------------------------->
-  msg = MessageParser(Height_K,  Long,  Lati,  Delta_S, VertSpeed);
+  msg = MessageParser(Height_K, Long, Lati, Delta_S, VertSpeed, SS_flag);
   Telemetry.SendS(msg);
 
-  BuzzerOnTime(20);
+  BuzzerOnTime(15);
 
   //-------------------------система спасения------------------------------------------>
-  if ((Height_K => maxHight_calculated) and (flag_1st_point)) {
-    1st_Height = Height_K;
+  if ((Height_K >= maxHight_calculated) && (flag_1st_point)) {
+    first_Height = Height_K;
     flag_1st_point = false;
   }
 
-  if ((Height_K < 1st_Height) and (flag_Axel_null)) {
-    //активация сс
+  if ((Height_K < first_Height) or (flag_Axel_null)) {
+    SS_flag = true;
+    DCMotorSetSpeed(100);
+    
   }
 
-  if ((abs(axel[3]) < 0.1) {
+  if ((-0.2 < accel[3]) and (accel[3] < 0.2)) {
     flag_Axel_null = true;
+    SS_flag = true;
   }
-
+  //------------------------------------------------------------------------------------>
 }
