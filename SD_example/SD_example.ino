@@ -1,14 +1,12 @@
 #include <AutoUpdate.h>
 #include <Timers.h>
-
 #include <GPS.h>
 #include <ADC.h>
 #include <IntPin.h>
-//#include <Macros.h>
 #include <SDCustom.h>
 #include <TelemetryLLCC68.h>
 #include <SD.h>
-///#include <Macros.h>
+
 
 AutoUpd_m AUpd; 
 
@@ -33,7 +31,17 @@ void SD_begin() {
   digitalWrite(53,HIGH);
 }
 
-bool SD_Start_Write() {
+bool SD_data_Write() {
+  File dataFile = SD.open("logs.csv", FILE_WRITE);
+  if (dataFile) {
+    dataFile.print(time_to_SD);
+    dataFile.print(", ");
+    dataFile.println(Coord);
+    dataFile.close();
+  }
+  else {
+    Serial.println("FAILLLLLL");
+  }
   
 
 }
@@ -113,18 +121,6 @@ void loop() {
   long time_to_SD = millis();
   GPS_Flag = GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
   print_GPS(&Long, &Lati, &Sp, &Alt, &Coord, &GPS_Flag);
-
-  File dataFile = SD.open("logs.csv", FILE_WRITE);
-  if (dataFile) {
-    dataFile.print(time_to_SD);
-    dataFile.print(", ");
-    dataFile.println(Coord);
-    dataFile.close();
-  }
-  else {
-    Serial.println("FAILLLLLL");
-  }
-
 
   delay(1000);
 }
