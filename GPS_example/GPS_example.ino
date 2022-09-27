@@ -1,6 +1,7 @@
 // Минимальный пример работы gps модуля платы RaceBoaard КБ INNOPOL`
 #include <AutoUpdate.h>
 #include <GPS.h>
+#include <TinyGPS++.h>
 
 //----------------------Переменные для GPS------------------------------------------------->
 bool GPS_Flag;  //Актуальность данных (true-данные новые и не считывались)
@@ -13,6 +14,7 @@ String Coord;   //Строка с координатами и высотой
 
 AutoUpd_m AUpd; 
 GPS_m GPS(9600);
+TinyGPSPlus GPSPlus; 
 
 void GPS_Init(){
   GPS.StartTrack();
@@ -50,16 +52,24 @@ void print_GPS(double *Long, double *Lati, double *Sp, double *Alt, String *Coor
 
 }
 
-
-
+double startLong;
+double startLati;
 void setup() {
   GPS_Init();
   Serial.begin(9600);
+  
 }
 
 void loop() {
+  while(millis()<1000) {
+    startLong = GPS.Longitude();
+    startLati = GPS.Latitude();
+  }
+
   GPS_Flag = GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
   print_GPS(&Long, &Lati, &Sp, &Alt, &Coord, &GPS_Flag);
+
+  Serial.println(GPSPlus.distanceBetween(startLati, startLong, Lati, Long));
   
   delay(1000);
 }
