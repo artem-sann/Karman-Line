@@ -3,23 +3,22 @@
 #include <TinyGPS++.h>
 
 TelemetryLLCC68_m Telemetry;
-String msg;
+String msg = "dnfuidhvibwuiefwuiefuowbfuiewhuewh";
 
 double msg_d[10];
 int32_t msg_i[10];
 
 void setup() {
   Serial.begin(9600);
+  Telemetry.on();
+  Telemetry.SetMaxPower();
+  Telemetry.SetChannel(Channel_4);
 }
 
 void loop() {
-  Telemetry.on();
-  for (uint8_t i = 0; i < 10; i++) { msg_d[i] = i * 2.25; }
-  for (uint8_t i = 0; i < 10; i++) { msg_i[i] = i * 3; }
-  //Telemetry.SetLowPower();
+  
+  
   Telemetry.SetMaxPower();
-
   Telemetry.SendS(msg);
-
   delay(100);
 }
