@@ -2,7 +2,7 @@
 // мотор использовался для активации системы выброса полезной нангрузки
 // выкручивается ось из гайки и освобождается пружина
 #define DCMotorPin1 6   //Пин 1-го входа мотора V0.1R && V0.2
-#define DCMotorPin2 5   //Пин 2-го входа мотора
+#define DCMotorPin2 7   //Пин 2-го входа мотора
 #define DCWakeUPPin 41  //Пин запуска драйвера двигателя
 
 void DCMotorSetSpeed(int y) {
@@ -25,5 +25,5 @@ void setup() {
 }
 
 void loop() {
-  DCMotorSetSpeed(100);
+  DCMotorSetSpeed(-100);
 }

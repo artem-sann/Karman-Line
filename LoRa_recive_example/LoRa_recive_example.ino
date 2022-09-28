@@ -12,13 +12,16 @@ void setup() {
   Serial.begin(9600);
   Telemetry.on();
   Telemetry.SetMaxPower();
-  Telemetry.SetChannel(Channel_2);
+  Telemetry.SetChannel(Channel_6);
 }
 
 void loop() {
 
   if (Telemetry.AvailablePacket()) {
     msg = Telemetry.ReciveS();
+  }
+  else {
+    msg = "none";
   }
   Serial.println(msg);
 
