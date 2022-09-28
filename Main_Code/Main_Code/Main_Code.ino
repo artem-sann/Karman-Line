@@ -42,26 +42,26 @@ GPS_m GPS(9600);
 
 bool SS_flag = false;
 //----------------------Переменные для GPS------------------------------------------------->
-bool GPS_Flag;  //Актуальность данных (true-данные новые и не считывались)
-double Long;    //Долгота, в градусах
-double Lati;    //Широта, в градусах
-double Sp;      //Горизонтальная скорость, в метрах в секунду
-double Alt;     //ВысотаБ в метрах в секунду
-String Coord;   //Строка с координатами и высотой
-double Delta_S;
-double StartLati;
-double StartLong;
+bool GPS_Flag;     //Актуальность данных (true-данные новые и не считывались)
+double Long;       //Долгота, в градусах
+double Lati;       //Широта, в градусах
+double Sp;         //Горизонтальная скорость, в метрах в секунду
+double Alt;        //ВысотаБ в метрах в секунду
+String Coord;      //Строка с координатами и высотой
+double Delta_S;    // Дальность полета
+double StartLati;  // начальные коордиинаты
+double StartLong;  // ....
 //----------------------------------------------------------------------------------------->
 
-double accel[4];
-double gyro[3];
-double mag[3];
-double Temp;
-double Height;
-double Height_K;
-double VertSpeed;
+double accel[4];   // акселерометр
+double gyro[3];    // гироскоп
+double mag[3];     // магнитометр
+double Temp;       // температура
+double Height;     // высота от барометра
+double Height_K;   // Высота фильтрованная Калманом
+double VertSpeed;  // вертикальная скорость
 
-
+//--------------------------Калибровка ---------------------->
 double CalibAccel[4][3] = {
   { 0, 0, 0 },  //ofsett
   { 1, 0, 0 },  //first line
@@ -75,7 +75,7 @@ double CalibMag[4][3] = {
   { 0, 1, 0 },  //second line
   { 0, 0, 1 }
 };  //third line
-
+//------------------------------------------------------------>
 
 void SD_begin() {
   pinMode(53, OUTPUT);
@@ -119,7 +119,7 @@ bool SD_Header_write() {
     dataFile.print(",");
     dataFile.print("Sp");
     dataFile.print(",");
-    dataFile.println("SS_flag");
+    dataFile.print("SS_flag");
     dataFile.print(",");
     dataFile.println("Delta_S");
 
@@ -161,7 +161,7 @@ bool SD_data_Write(double *Temp, double *Height_K, double *VertSpeed, double *ac
     dataFile.print(",");
     dataFile.print(*Sp);
     dataFile.print(",");
-    dataFile.println(SS_flag);
+    dataFile.print(SS_flag);
     dataFile.print(",");
     dataFile.println(Delta_S);
 
@@ -249,10 +249,8 @@ String MessageParser(double Height, double Long, double Lati, double Delta_S, do
 
 
 void setup() {
-
+  // инициализация всего подряд-------------->
   DCMotorInit();
-  //DCMotorSetSpeed(100);
-
 
   GPS_Init();
 
@@ -260,7 +258,6 @@ void setup() {
   Bar.begin();
   Bar.SetZeroHeight();
   IMU.begin();
-
 
   Serial.begin(9600);
   SD_begin();
@@ -291,9 +288,10 @@ double maxHight_calculated = 270;  // предполагаемая максим�
 
 void loop() {
   //калибровка начального положения gps------------------------------------------------>
-  while (millis() < 2000) {
+  while (StartLong < 1) {
     StartLong = GPS.Longitude();
     StartLati = GPS.Latitude();
+    BuzzerOnTime(10);
   }
 
   // снятие данных со всех датчиков---------------------------------------------------->
@@ -322,7 +320,7 @@ void loop() {
   msg = MessageParser(Height_K, Long, Lati, Delta_S, VertSpeed, SS_flag);
   Telemetry.SendS(msg);
 
-  BuzzerOnTime(15);
+  BuzzerOnTime(10);
 
   //-------------------------система спасения------------------------------------------>
   if ((Height_K >= maxHight_calculated) && (flag_1st_point)) {
@@ -333,10 +331,9 @@ void loop() {
   if ((Height_K < first_Height) or (flag_Axel_null)) {
     SS_flag = true;
     DCMotorSetSpeed(100);
-    
   }
 
-  if ((-0.2 < accel[3]) and (accel[3] < 0.2)) {
+  if ((-0.15 < accel[3]) and (accel[3] < 0.15)) {
     flag_Axel_null = true;
     SS_flag = true;
   }
