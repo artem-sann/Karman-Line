@@ -258,6 +258,9 @@ void setup() {
   Bar.begin();
   Bar.SetZeroHeight();
   IMU.begin();
+  IMU.SetCalibAccel(CalibAccel[0], CalibAccel[1], CalibAccel[2], CalibAccel[3]);
+  IMU.SetCalibGyro(CalibGyro);
+  IMU.SetCalibMag(CalibMag[0], CalibMag[1], CalibMag[2], CalibMag[3]);
 
   Serial.begin(9600);
   SD_begin();
@@ -274,6 +277,7 @@ void setup() {
   Telemetry.SetMaxPower();
   Telemetry.SetChannel(Channel_2);
   //---------------------------------------->
+  
   BuzzerOnTime(200);
   delay(300);
 }
@@ -282,23 +286,32 @@ void setup() {
 bool flag_1st_point = true;
 bool flag_Axel_null = false;
 double first_Height = -100;
-double maxHight_calculated = 270;  // предполагаемая максимальная высота полета минус 10 метров
-
+double maxHight_calculated = 285;  // предполагаемая максимальная высота полета минус 10 метров по расчетам - 292м по расчетам. по факту полета оказалось меньше :(
+long time_to_start_ss = 9300; // время до запуска сс - по расчетам 8.5 сек поставлю 9300 мс
+long time_to_start_ss_a = 6000; // порог после которого может сработать СС оп акселерометру
+double axe_start = 2; // ускорение по которому определяем запуск
+bool start_flag = false; //  флаг определения моемнта запуска
+bool time_flag = false; // флаг для времени полета 
+long start_time= 0; // время старта
+bool time_flag_a = false; // флаг для срабатывания сс по акселерометру
 //------------------------------------------------------------------------------------>
 
-void loop() {
+void loop() { // главный цикл программы
   //калибровка начального положения gps------------------------------------------------>
-  while (StartLong < 1) {
+  while ((StartLong < 1)) {
     StartLong = GPS.Longitude();
     StartLati = GPS.Latitude();
     BuzzerOnTime(10);
   }
-
+  //ждем пока не выдернут чеку, после этого начнем ожидать старт----------------------->
+  while(analogRead(A0) > 1000) {
+    BuzzerOnTime(1000);
+    delay(1000);
+    StartLong = GPS.Longitude();
+    StartLati = GPS.Latitude();
+  }
+ 
   // снятие данных со всех датчиков---------------------------------------------------->
-  IMU.SetCalibAccel(CalibAccel[0], CalibAccel[1], CalibAccel[2], CalibAccel[3]);
-  IMU.SetCalibGyro(CalibGyro);
-  IMU.SetCalibMag(CalibMag[0], CalibMag[1], CalibMag[2], CalibMag[3]);
-
   IMU.GetAccel(accel);
   IMU.GetGyro(gyro);
   IMU.GetMag(mag);
@@ -311,8 +324,19 @@ void loop() {
   VertSpeed = Bar.GetVertSpeed();
 
   GPS_piling(&Long, &Lati, &Sp, &Alt, &Coord);
+  //-----------------расчет дистанции между начальными и текущими координатами-------->
   Delta_S = GPSPlus.distanceBetween(StartLati, StartLong, Lati, Long);
 
+  //---------------проверка на факт старта-------------------------------------------->
+  if (!start_flag and (accel[3] < axe_start)) {
+    while (accel[3] < axe_start) {
+      IMU.GetAccel(accel);
+      delay(2);
+    }
+    start_flag  = true;
+    start_time = millis(); // записываем время старта
+  }
+  
   // запись снятых данных в файл------------------------------------------------------->
   SD_data_Write(&Temp, &Height_K, &VertSpeed, accel, gyro, Coord, &Sp, SS_flag, Delta_S);
 
@@ -320,22 +344,30 @@ void loop() {
   msg = MessageParser(Height_K, Long, Lati, Delta_S, VertSpeed, SS_flag);
   Telemetry.SendS(msg);
 
-  BuzzerOnTime(10);
+  BuzzerOnTime(10); // пищим 
 
   //-------------------------система спасения------------------------------------------>
-  if ((Height_K >= maxHight_calculated) && (flag_1st_point)) {
+  if ((Height_K >= maxHight_calculated) && (flag_1st_point)) { 
     first_Height = Height_K;
     flag_1st_point = false;
   }
 
-  if ((Height_K < first_Height) or (flag_Axel_null)) {
+  if ((Height_K < first_Height) or (flag_Axel_null) or (time_flag)) {
     SS_flag = true;
     DCMotorSetSpeed(100);
-  }
+  } 
 
-  if ((-0.15 < accel[3]) and (accel[3] < 0.15)) {
+  if (((-0.15 < accel[3]) and (accel[3] < 0.15)) and time_flag_a) {
     flag_Axel_null = true;
     SS_flag = true;
+  }
+
+  if ((millis() - start_time) > time_to_start_ss_a) {
+    time_flag_a = true;
+  }
+
+  if ((millis() - start_time) > time_to_start_ss) {
+    time_flag = true;
   }
   //------------------------------------------------------------------------------------>
 }

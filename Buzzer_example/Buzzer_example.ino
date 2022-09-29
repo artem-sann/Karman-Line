@@ -5,11 +5,14 @@
 #define BuzzerOn tone(Buzzer_Pin, Buzzer_Frequency)              //Активировать бузер
 #define BuzzerOnTime(x) tone(Buzzer_Pin, Buzzer_Frequency, (x))  //Активировать бузер на некоторое время в мс
 #define BuzzerOff noTone(Buzzer_Pin)                             //Деактивировать бузер
-
 void setup() {
+  
 }
 
 void loop() {
-  BuzzerOnTime(200);
-  delay(300);
+  if (analogRead(A0) >) {
+    BuzzerOnTime(200);
+    delay(300);
+  }
+  
 }
